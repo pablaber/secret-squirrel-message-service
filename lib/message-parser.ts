@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { messages } from "../../drizzle/schema.ts";
+import { messages } from "../drizzle/schema";
 import { InferSelectModel } from "drizzle-orm";
 
 type ParsedMessage = InferSelectModel<typeof messages>;

@@ -1,13 +1,11 @@
 import { Hono } from "hono";
 import { createNodeWebSocket } from "@hono/node-ws";
-import { WebSocketService } from "./web-socket-service.ts";
-import {
-  initMessageParser,
-  messageParserErrorCodes,
-} from "./message-parser.ts";
-import { logger } from "./logger.ts";
-import { db } from "./db.ts";
-import { messages } from "../../drizzle/schema.ts";
+import { WebSocketService } from "./web-socket-service";
+import { initMessageParser, messageParserErrorCodes } from "./message-parser";
+import { logger } from "./logger";
+import { db } from "./db";
+import { messages } from "../drizzle/schema";
+import { WSContext } from "hono/ws";
 
 const app = new Hono();
 
@@ -29,7 +27,11 @@ app.get(
 
     return {
       onOpen(_event, client) {
-        webSocketService.addClientToRoom(roomId, fingerprint, client);
+        webSocketService.addClientToRoom(
+          roomId,
+          fingerprint,
+          client as WSContext<WebSocket>
+        );
       },
       onMessage(event) {
         const rawMessage = event.data.toString();

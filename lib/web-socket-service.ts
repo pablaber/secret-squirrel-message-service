@@ -1,5 +1,5 @@
 import { WSContext } from "hono/ws";
-import { logger } from "./logger.ts";
+import { logger } from "./logger";
 
 type Fingerprint = string;
 type RoomClients = Map<Fingerprint, WSContext<WebSocket>>;

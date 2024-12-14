@@ -1,0 +1,1 @@
+{"root":["./drizzle.config.ts","./drizzle/relations.ts","./drizzle/schema.ts","./src/main.ts","./src/lib/db.ts","./src/lib/logger.ts","./src/lib/message-parser.ts","./src/lib/server.ts","./src/lib/web-socket-service.ts"],"errors":true,"version":"5.7.2"}

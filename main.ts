@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
-import { app, injectWebSocket } from "./lib/server.ts";
+import { app, injectWebSocket } from "./lib/server";
 
 const port = process.env.PORT || 3000;
 
