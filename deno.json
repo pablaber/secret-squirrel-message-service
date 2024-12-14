@@ -1,6 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --allow-read --allow-net --allow-env --allow-sys --watch main.ts | pino-pretty -c",
+    "main": "deno run --allow-read --allow-net --allow-env --allow-sys --watch main.ts",
+    "dev": "deno run main | pino-pretty -c",
     "db:pull": "deno run -A --node-modules-dir npm:drizzle-kit pull"
   },
   "imports": {
