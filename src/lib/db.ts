@@ -1,8 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "../drizzle/schema.ts";
+import * as schema from "../../drizzle/schema.ts";
 import pg from "pg";
 
-const connectionString = Deno.env.get("DATABASE_URL");
+const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL is required");
 }

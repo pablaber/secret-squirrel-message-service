@@ -1,12 +1,17 @@
 import { Hono } from "hono";
-import { upgradeWebSocket } from "hono/deno";
+import { createNodeWebSocket } from "@hono/node-ws";
 import { WebSocketService } from "./web-socket-service.ts";
-import { initMessageParser, messageParserErrorCodes } from "./message-parser.ts";
+import {
+  initMessageParser,
+  messageParserErrorCodes,
+} from "./message-parser.ts";
 import { logger } from "./logger.ts";
 import { db } from "./db.ts";
-import { messages } from "../drizzle/schema.ts";
+import { messages } from "../../drizzle/schema.ts";
 
 const app = new Hono();
+
+const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
 app.get("/", (c) => {
   return c.text("Hello World!");
@@ -31,36 +36,52 @@ app.get(
         const [error, message] = messageParser.parseMessage(rawMessage);
         if (error) {
           logger.error(error.asLogObject());
-          webSocketService.sendMessageToRoom(roomId, fingerprint, error.asWebSocketMessage());
-        } else if (message){
-          webSocketService.sendMessageToRoom(roomId, fingerprint, JSON.stringify({
-            success: true,
-            message,
-          }));
-          db.insert(messages).values(message)
+          webSocketService.sendMessageToRoom(
+            roomId,
+            fingerprint,
+            error.asWebSocketMessage()
+          );
+        } else if (message) {
+          webSocketService.sendMessageToRoom(
+            roomId,
+            fingerprint,
+            JSON.stringify({
+              success: true,
+              message,
+            })
+          );
+          db.insert(messages)
+            .values(message)
             .then(() => {
               logger.debug({
-                message: 'saved message to database',
+                message: "saved message to database",
                 messageId: message.id,
               });
             })
             .catch((error) => {
               logger.error({
-                message: 'failed to save message to database',
+                message: "failed to save message to database",
                 error,
               });
               // TODO: send error to client about db save
             });
         } else {
-          const error = messageParser.createError("Message was undefined", messageParserErrorCodes.UNKNOWN_ERROR);
-          webSocketService.sendMessageToRoom(roomId, fingerprint, error.asWebSocketMessage());
+          const error = messageParser.createError(
+            "Message was undefined",
+            messageParserErrorCodes.UNKNOWN_ERROR
+          );
+          webSocketService.sendMessageToRoom(
+            roomId,
+            fingerprint,
+            error.asWebSocketMessage()
+          );
         }
       },
       onClose: () => {
-       webSocketService.removeClientFromRoom(roomId, fingerprint);
+        webSocketService.removeClientFromRoom(roomId, fingerprint);
       },
     };
-  }),
+  })
 );
 
-export default app;
+export { app, injectWebSocket };

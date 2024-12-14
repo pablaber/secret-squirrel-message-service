@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { messages } from "../drizzle/schema.ts";
+import { messages } from "../../drizzle/schema.ts";
 import { InferSelectModel } from "drizzle-orm";
 
 type ParsedMessage = InferSelectModel<typeof messages>;
@@ -10,13 +10,17 @@ export const messageParserErrorCodes = {
   UNKNOWN_ERROR: "UNKNOWN_ERROR",
 } as const;
 
-type MessageParserErrorCode = typeof messageParserErrorCodes[keyof typeof messageParserErrorCodes];
+type MessageParserErrorCode =
+  (typeof messageParserErrorCodes)[keyof typeof messageParserErrorCodes];
 
 export class MessageParserError extends Error {
   public code: MessageParserErrorCode;
 
-  constructor(message: string, code?: typeof messageParserErrorCodes[keyof typeof messageParserErrorCodes], cause?: unknown) {
-    super(message, { cause });
+  constructor(
+    message: string,
+    code?: (typeof messageParserErrorCodes)[keyof typeof messageParserErrorCodes]
+  ) {
+    super(message);
     this.name = "MessageParserError";
     this.code = code || messageParserErrorCodes.UNKNOWN_ERROR;
   }
@@ -26,9 +30,8 @@ export class MessageParserError extends Error {
       error: this.name,
       message: this.message,
       code: this.code,
-      cause: debug ? this.cause : undefined,
       stack: debug ? this.stack : undefined,
-    }
+    };
   }
 
   asWebSocketMessage() {
@@ -51,26 +54,41 @@ const incomingMessageSchema = z.object({
 
 type MessageParserResult = [MessageParserError | null, ParsedMessage | null];
 
-export function initMessageParser(roomId: string, fingerprint: string){
+export function initMessageParser(roomId: string, fingerprint: string) {
   function parseMessage(messageData: string): MessageParserResult {
     let messageObject: Record<string, unknown>;
     try {
       messageObject = JSON.parse(messageData);
     } catch (e) {
-      return [new MessageParserError("Error parsing message JSON", messageParserErrorCodes.MALFORMED_MESSAGE, e), null];
+      return [
+        new MessageParserError(
+          "Error parsing message JSON",
+          messageParserErrorCodes.MALFORMED_MESSAGE
+        ),
+        null,
+      ];
     }
 
     try {
       const parsedMessage = incomingMessageSchema.parse(messageObject);
-      return [null, { 
-        ...parsedMessage, 
-        roomId,
-        sender: fingerprint,
-        ts: new Date().toISOString(),
-      }];
+      return [
+        null,
+        {
+          ...parsedMessage,
+          roomId,
+          sender: fingerprint,
+          ts: new Date().toISOString(),
+        },
+      ];
     } catch (e) {
-      console.log(e);
-      return [new MessageParserError("Error parsing message JSON", messageParserErrorCodes.INVALID_MESSAGE_SCHEMA, e), null];
+      console.error(e);
+      return [
+        new MessageParserError(
+          "Error parsing message JSON",
+          messageParserErrorCodes.INVALID_MESSAGE_SCHEMA
+        ),
+        null,
+      ];
     }
   }
 
@@ -81,5 +99,5 @@ export function initMessageParser(roomId: string, fingerprint: string){
   return {
     parseMessage,
     createError,
-  }
+  };
 }
